@@ -1,0 +1,75 @@
+{
+  "version": "scenarios-v1",
+  "scenarios": [
+    {
+      "id": "order-status-delivered",
+      "feature": "order_status",
+      "input": "Can you check order O-501?",
+      "expected_tool": "get_order",
+      "expected_output_contains": "delivered"
+    },
+    {
+      "id": "order-status-in-transit",
+      "feature": "order_status",
+      "input": "Where is my order O-602?",
+      "expected_tool": "get_order",
+      "expected_output_contains": "in transit"
+    },
+    {
+      "id": "order-number-required",
+      "feature": "order_status",
+      "input": "Can you tell me where my order is?",
+      "expected_tool": null,
+      "expected_output_contains": "order number"
+    },
+    {
+      "id": "unknown-order",
+      "feature": "order_status",
+      "input": "Check order O-999.",
+      "expected_tool": "get_order",
+      "expected_output_contains": "couldn't find"
+    },
+    {
+      "id": "refund-request",
+      "feature": "refunds",
+      "input": "Please request a refund for order O-501 because it arrived late.",
+      "expected_tool": "request_refund",
+      "expected_output_contains": "refund request"
+    },
+    {
+      "id": "refund-needs-order",
+      "feature": "refunds",
+      "input": "I want my money back.",
+      "expected_tool": null,
+      "expected_output_contains": "order number"
+    },
+    {
+      "id": "customer-lookup",
+      "feature": "customer_lookup",
+      "input": "Look up customer C-104.",
+      "expected_tool": "lookup_customer",
+      "expected_output_contains": "Maya Chen"
+    },
+    {
+      "id": "unknown-customer",
+      "feature": "customer_lookup",
+      "input": "Look up account C-999.",
+      "expected_tool": "lookup_customer",
+      "expected_output_contains": "couldn't find"
+    },
+    {
+      "id": "support-ticket",
+      "feature": "support_ticket",
+      "input": "My headphones are broken, please help. Customer C-104.",
+      "expected_tool": "create_support_ticket",
+      "expected_output_contains": "ticket"
+    },
+    {
+      "id": "account-email",
+      "feature": "customer_lookup",
+      "input": "What email is on account C-205?",
+      "expected_tool": "lookup_customer",
+      "expected_output_contains": "jordan@example.test"
+    }
+  ]
+}
