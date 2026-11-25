@@ -43,6 +43,7 @@ class TraceStore:
                     is_good INTEGER NOT NULL CHECK (is_good IN (0, 1)),
                     critique TEXT NOT NULL DEFAULT '',
                     final_output TEXT,
+                    source TEXT NOT NULL DEFAULT 'human' CHECK (source IN ('human', 'assistant')),
                     labeled_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
                 );
                 CREATE TABLE IF NOT EXISTS judge_results (
@@ -55,6 +56,12 @@ class TraceStore:
                 );
                 """
             )
+            label_columns = {row["name"] for row in db.execute("PRAGMA table_info(labels)")}
+            if "source" not in label_columns:
+                db.execute(
+                    "ALTER TABLE labels ADD COLUMN source TEXT NOT NULL DEFAULT 'human' "
+                    "CHECK (source IN ('human', 'assistant'))"
+                )
 
     def add_trace(
         self,
@@ -93,7 +100,7 @@ class TraceStore:
         self, *, feature: str | None = None, scenario: str | None = None, limit: int = 500
     ) -> list[dict[str, Any]]:
         query = """
-            SELECT t.*, l.is_good, l.critique, l.final_output,
+            SELECT t.*, l.is_good, l.critique, l.final_output, l.source AS label_source,
                    j.judge_version, j.critique AS judge_critique, j.is_good AS judge_is_good
             FROM traces t
             LEFT JOIN labels l ON l.trace_id = t.id
@@ -108,16 +115,27 @@ class TraceStore:
             rows = db.execute(query, (feature, feature, scenario, scenario, limit)).fetchall()
         return [dict(row) for row in rows]
 
-    def save_label(self, trace_id: int, is_good: bool, critique: str, final_output: str) -> None:
+    def save_label(
+        self,
+        trace_id: int,
+        is_good: bool,
+        critique: str,
+        final_output: str,
+        *,
+        source: str = "human",
+    ) -> None:
+        if source not in ("human", "assistant"):
+            raise ValueError("Label source must be 'human' or 'assistant'.")
         with self._connect() as db:
             db.execute(
-                """INSERT INTO labels (trace_id, is_good, critique, final_output)
-                VALUES (?, ?, ?, ?)
+                """INSERT INTO labels (trace_id, is_good, critique, final_output, source)
+                VALUES (?, ?, ?, ?, ?)
                 ON CONFLICT(trace_id) DO UPDATE SET
                     is_good=excluded.is_good, critique=excluded.critique,
                     final_output=excluded.final_output,
+                    source=excluded.source,
                     labeled_at=strftime('%Y-%m-%dT%H:%M:%fZ','now')""",
-                (trace_id, int(is_good), critique, final_output),
+                (trace_id, int(is_good), critique, final_output, source),
             )
 
     def add_judge_result(
@@ -144,7 +162,7 @@ class TraceStore:
             rows = db.execute(
                 """SELECT l.is_good AS human, j.is_good AS judged
                    FROM labels l JOIN judge_results j ON j.trace_id = l.trace_id
-                   WHERE j.id = (
+                   WHERE l.source = 'human' AND j.id = (
                        SELECT MAX(j2.id) FROM judge_results j2
                        WHERE j2.trace_id = l.trace_id
                          AND (? IS NULL OR j2.judge_version = ?)

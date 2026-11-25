@@ -71,6 +71,15 @@ def test_export_requires_human_approval_and_assertion_pass(tmp_path):
     assert record["messages"][1]["content"] == "Order O-501 is delivered."
 
 
+def test_export_excludes_assistant_review_labels(tmp_path):
+    store = TraceStore(tmp_path / "traces.sqlite3")
+    run_suite(store, scenarios=[load_scenarios()["scenarios"][6]])
+    trace = store.list_traces(limit=1)[0]
+    store.save_label(trace["id"], True, "Assistant review.", "Reviewed answer.", source="assistant")
+
+    assert export_passing_jsonl(store, tmp_path / "approved.jsonl") == 0
+
+
 def test_bad_trace_failure_draft_preserves_scenario_context():
     draft = failure_test_draft({"id": 8, "feature": "refunds", "input": "Refund?", "critique": "Missing order check."})
 
@@ -83,7 +92,7 @@ def test_judge_alignment_reports_precision_and_recall(tmp_path):
     store = TraceStore(tmp_path / "traces.sqlite3")
     trace_ids = [
         store.add_trace(user_input=f"input {index}", tool_calls=[], output="output", prompt_version="v1")
-        for index in range(3)
+        for index in range(4)
     ]
     store.save_label(trace_ids[0], True, "", "output")
     store.save_label(trace_ids[1], False, "", "output")
@@ -91,6 +100,8 @@ def test_judge_alignment_reports_precision_and_recall(tmp_path):
     store.add_judge_result(trace_ids[0], "judge-v1", "", True)
     store.add_judge_result(trace_ids[1], "judge-v1", "", True)
     store.add_judge_result(trace_ids[2], "judge-v1", "", False)
+    store.save_label(trace_ids[3], False, "Assistant review only.", "output", source="assistant")
+    store.add_judge_result(trace_ids[3], "judge-v1", "", False)
 
     metrics = store.judge_alignment("judge-v1")
     assert metrics == {"n": 3, "precision": 0.5, "recall": 0.5, "tp": 1, "fp": 1, "fn": 1}

@@ -1,0 +1,43 @@
+{
+  "version": "real-cases-v2",
+  "cases": [
+    {
+      "id": "candidate-1-vs-jobs4panindia-ai-intern",
+      "resume_path": "resumes/candidate.pdf",
+      "jd_path": "jds/jobs4panindia_ai_intern.txt",
+      "expected_gap_severity": "low",
+      "must_not_flag": [
+        "Python",
+        "Pandas",
+        "scikit-learn",
+        "Generative AI",
+        "LLMs",
+        "RAG",
+        "prompt engineering",
+        "LangGraph"
+      ],
+      "min_questions": 8,
+      "max_questions": 15,
+      "label_rationale": "The resume documents Python, ML libraries, GenAI/LLM and RAG projects, prompt engineering, and AI/ML education; the inclusive internship has few material gaps."
+    },
+    {
+      "id": "candidate-2-vs-jobs4panindia-ai-intern",
+      "resume_path": "resumes/peer.pdf",
+      "jd_path": "jds/jobs4panindia_ai_intern.txt",
+      "expected_gap_severity": "low",
+      "must_not_flag": [
+        "Python",
+        "Pandas",
+        "scikit-learn",
+        "Generative AI",
+        "LLMs",
+        "RAG",
+        "prompt engineering",
+        "LangGraph"
+      ],
+      "min_questions": 8,
+      "max_questions": 15,
+      "label_rationale": "The resume documents Python, ML libraries, GenAI/LLM and RAG projects, prompt engineering, and AI/ML education; the inclusive internship has few material gaps."
+    }
+  ]
+}

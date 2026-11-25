@@ -43,9 +43,12 @@ for trace in filtered:
         if trace["judge_version"]:
             st.info(f"Judge ({trace['judge_version']}): {'good' if trace['judge_is_good'] else 'bad'} — {trace['judge_critique']}")
         with st.form(f"label-{trace['id']}"):
+            source_options = ["Human", "Assistant"]
+            source_index = 1 if trace["label_source"] == "assistant" else 0
+            review_source = st.radio("Review source", source_options, index=source_index, horizontal=True)
             label_options = ["Choose a label", "Good", "Bad"]
             label_index = 1 if trace["is_good"] == 1 else 2 if trace["is_good"] == 0 else 0
-            label = st.radio("Human label", label_options, index=label_index, horizontal=True)
+            label = st.radio("Question quality", label_options, index=label_index, horizontal=True)
             critique = st.text_area("Critique", value=trace["critique"] or "")
             final_output = st.text_area("Editable final output", value=trace["final_output"] or trace["output"])
             submitted = st.form_submit_button("Save label")
@@ -53,5 +56,11 @@ for trace in filtered:
                 if label == "Choose a label":
                     st.error("Choose Good or Bad before saving.")
                 else:
-                    store.save_label(trace["id"], label == "Good", critique, final_output)
+                    store.save_label(
+                        trace["id"],
+                        label == "Good",
+                        critique,
+                        final_output,
+                        source=review_source.lower(),
+                    )
                     st.success("Label saved. Rerun the app to refresh exports and metrics.")

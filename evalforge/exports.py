@@ -13,7 +13,11 @@ def export_passing_jsonl(store: TraceStore, path: str | Path) -> int:
     with Path(path).open("w", encoding="utf-8") as file:
         for trace in traces:
             approved_output = trace["final_output"] or trace["output"]
-            if trace["is_good"] != 1 or trace["assertions_passed"] != 1:
+            if (
+                trace["is_good"] != 1
+                or trace["label_source"] != "human"
+                or trace["assertions_passed"] != 1
+            ):
                 continue
             file.write(
                 json.dumps(

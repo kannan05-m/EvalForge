@@ -7,3 +7,5 @@ __pycache__/
 generated-cases.json
 fine-tuning.jsonl
 failure-test-draft.json
+real_cases/resumes/
+real_cases/jds/

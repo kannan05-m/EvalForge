@@ -23,7 +23,7 @@ python -m pip install -e ".[ui]"
 streamlit run viewer/app.py
 ```
 
-Filter traces, label each response good/bad, record a critique, and edit its final output. The dashboard reports assertion pass rates by date, prompt version, and suite version. Judge precision and recall are compared only for traces that have both a human label and a judge result.
+Filter traces, label each response good/bad, record a critique, and edit its final output. Human and assistant review labels are distinguished; judge alignment and fine-tuning exports use human labels only. The dashboard reports assertion pass rates by date, prompt version, and suite version.
 
 Synthetic test generation and the LLM judge use an OpenAI-compatible endpoint. They are opt-in: configure `OPENAI_API_KEY`, and optionally `OPENAI_BASE_URL` and `EVALFORGE_MODEL`, before running these commands. The generator seeds from the hand-written suite, validates candidates, and runs a refinement round by default; inspect generated cases before merging. Do not send sensitive trace data to a provider without reviewing its data-handling terms.
 
@@ -46,3 +46,16 @@ Failure drafts intentionally leave the expected tool/output for a human to decid
 ## Measuring improvement
 
 Record a baseline with `evalforge eval`, make a focused prompt or assistant change, then rerun the same scenarios. Compare pass rates across prompt versions in the dashboard. Add reviewed failure modes as new scenarios so the suite grows with the system. Judge alignment is reported as precision and recall against human labels, not raw agreement. No performance numbers are claimed here: establish them from your own runs and reviewed traces.
+
+## Evaluate InterviewForge
+
+The optional live-pipeline adapter uses hand-labeled resume/JD cases and writes each result to the same SQLite trace store. Resume and JD text is kept under `real_cases/resumes/` and `real_cases/jds/`; both directories are Git-ignored. The included manifest has two strong-fit pairs from the supplied resumes and one supplied internship description. Add more weak-fit and mismatched-domain JDs before treating this small set as a broad benchmark.
+
+```bash
+export INTERVIEWFORGE_URL="https://<your-render-app>.onrender.com"
+python -m evalforge.interviewforge_eval real_cases/cases.json
+```
+
+The adapter posts each resume PDF and JD as multipart form fields to `/api/analyze`, then normalizes the returned `GraphState` fields. It records only file paths—not resume or JD text—in local traces. Review the configured endpoint and its data handling before running with personal data.
+
+On the supplied two-pair run, both cases passed the rule-based checks. A separate assistant review marked one question set Good and one Bad, with critiques saved as assistant reviews—not human ground truth. This small, strong-fit-only sample is not a broad quality benchmark.
